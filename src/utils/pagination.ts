@@ -1,0 +1,27 @@
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export function paginate(page: number, limit: number): { offset: number; limit: number } {
+  return {
+    offset: (page - 1) * limit,
+    limit,
+  };
+}
+
+export function buildPaginationMeta(total: number, page: number, limit: number): PaginationMeta {
+  const totalPages = Math.ceil(total / limit);
+  return {
+    page,
+    limit,
+    total,
+    totalPages,
+    hasNext: page < totalPages,
+    hasPrev: page > 1,
+  };
+}
