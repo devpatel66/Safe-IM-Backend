@@ -542,9 +542,22 @@ export const pdfService = {
     drawLine(page, marginLeft, currentY, marginRight, currentY, 0.6, borderGrey);
     drawLine(page, marginLeft, currentY - 14, marginRight, currentY - 14, 0.6, borderGrey);
 
+    const getVehicleTypeLabel = (vt: string | null | undefined) => {
+      if (!vt) return "-";
+      const mapping: Record<string, string> = {
+        sedan: "Sedan",
+        suv: "SUV",
+        hatchback: "Hatchback",
+        luxury: "Premium SUV",
+        tempo_traveler: "Tempo Traveler",
+        other: "Other",
+      };
+      return mapping[vt.toLowerCase()] || vt;
+    };
+
     const odoHeaders = ["VEHICLE TYPE", "VEHICLE MODEL", "CAR NO.", "IS A/C?", "OPENING KM", "CLOSING KM", "TOTAL KM"];
     const odoValues = [
-      (invoice.vehicleType || "-").toUpperCase(),
+      getVehicleTypeLabel(invoice.vehicleType).toUpperCase(),
       (invoice.vehicleModel || "-").toUpperCase(),
       (invoice.vehicleNumber || "-").toUpperCase(),
       invoice.isAc ? "YES" : "NO",
@@ -1268,7 +1281,12 @@ export const pdfService = {
         const jDate = inv.journeyStartDate ? new Date(inv.journeyStartDate).toLocaleDateString("en-IN") : "-";
         drawCellText(page, jDate, xJourneyDate, xDesc, cellCenterY, fontRegular, 7.5, textDark);
         // DESCRIPTION
-        drawCellText(page, inv.notes || "-", xDesc, xUser, cellCenterY, fontRegular, 7.5, textDark);
+        const descriptionText = (inv.notes && inv.notes.trim() !== "")
+          ? inv.notes
+          : (inv.items && inv.items[0]?.description && inv.items[0].description.trim() !== "")
+          ? inv.items[0].description
+          : "-";
+        drawCellText(page, descriptionText, xDesc, xUser, cellCenterY, fontRegular, 7.5, textDark);
         // USERNAME
         drawCellText(page, inv.username || "-", xUser, xSubtotal, cellCenterY, fontRegular, 7.5, textDark);
         // SUBTOTAL

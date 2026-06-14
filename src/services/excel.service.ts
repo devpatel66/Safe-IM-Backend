@@ -23,6 +23,19 @@ function formatInvoiceNumberForDisplay(
   return invoiceNumber;
 }
 
+function getVehicleTypeLabel(vt: string | null | undefined): string {
+  if (!vt) return "-";
+  const mapping: Record<string, string> = {
+    sedan: "Sedan",
+    suv: "SUV",
+    hatchback: "Hatchback",
+    luxury: "Premium SUV",
+    tempo_traveler: "Tempo Traveler",
+    other: "Other",
+  };
+  return mapping[vt.toLowerCase()] || vt;
+}
+
 function formatTimeOnly(timeInput: any): string {
   if (!timeInput) return "-";
 
@@ -194,7 +207,7 @@ export const excelService = {
     // Invoice Metadata Block
     sheet.addRow(["Client Name:", invoice.clientId, "", "Invoice Date:", new Date(invoice.invoiceDate).toLocaleDateString("en-IN")]);
     sheet.addRow(["Username:", invoice.username || "-", "", "Department:", invoice.department || "-"]);
-    sheet.addRow(["Vehicle Type:", invoice.vehicleType || "-", "", "Vehicle Plate:", invoice.vehicleNumber || "-"]);
+    sheet.addRow(["Vehicle Type:", getVehicleTypeLabel(invoice.vehicleType), "", "Vehicle Plate:", invoice.vehicleNumber || "-"]);
     sheet.addRow(["Start KM:", invoice.startKm ?? "-", "End KM:", invoice.endKm ?? "-", "Total KM:", invoice.totalKm ?? "-"]);
     
     // Format metadata block

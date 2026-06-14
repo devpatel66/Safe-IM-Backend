@@ -1,6 +1,6 @@
 import { eq, inArray } from "drizzle-orm";
 import { db } from "../db";
-import { statements, statementItems, invoices } from "../db/schema";
+import { statements, statementItems, invoices, invoiceItems } from "../db/schema";
 import { CreateStatementInput, UpdateStatementInput } from "../validators/statement.validator";
 import { generateStatementNumber } from "../utils/numberGenerator";
 
@@ -46,10 +46,33 @@ export const statementService = {
 
     const invoiceIds = items.map((i) => i.invoiceId);
 
-    const invoiceList =
-      invoiceIds.length > 0
-        ? await db.select().from(invoices).where(inArray(invoices.id, invoiceIds))
-        : [];
+    let invoiceList: any[] = [];
+    if (invoiceIds.length > 0) {
+      const invoicesRows = await db
+        .select()
+        .from(invoices)
+        .where(inArray(invoices.id, invoiceIds));
+
+      const itemsRows = await db
+        .select()
+        .from(invoiceItems)
+        .where(inArray(invoiceItems.invoiceId, invoiceIds))
+        .orderBy(invoiceItems.id);
+
+      // Group items by invoiceId
+      const itemsByInvoiceId = new Map<number, typeof invoiceItems.$inferSelect[]>();
+      for (const item of itemsRows) {
+        if (!itemsByInvoiceId.has(item.invoiceId)) {
+          itemsByInvoiceId.set(item.invoiceId, []);
+        }
+        itemsByInvoiceId.get(item.invoiceId)!.push(item);
+      }
+
+      invoiceList = invoicesRows.map((inv) => ({
+        ...inv,
+        items: itemsByInvoiceId.get(inv.id) || [],
+      }));
+    }
 
     return { ...statement, invoices: invoiceList };
   },

@@ -67,13 +67,19 @@ export const planService = {
   },
 
   async updateRate(id: number, data: UpdatePlanRateInput) {
+    // Build the update payload, only including fields that are explicitly provided.
+    // Spreading the raw `data` would set missing optional fields to undefined,
+    // which Drizzle interprets as "SET column = NULL", wiping existing values.
+    const updatePayload: Record<string, any> = {};
+    if (data.serviceType !== undefined) updatePayload.serviceType = data.serviceType;
+    if (data.vehicleType !== undefined) updatePayload.vehicleType = data.vehicleType;
+    if (data.acType !== undefined) updatePayload.acType = data.acType;
+    if (data.rate !== undefined) updatePayload.rate = String(data.rate);
+    if (data.extraRate !== undefined) updatePayload.extraRate = String(data.extraRate);
+
     const [updated] = await db
       .update(planRates)
-      .set({
-        ...data,
-        rate: data.rate !== undefined ? String(data.rate) : undefined,
-        extraRate: data.extraRate !== undefined ? String(data.extraRate) : undefined,
-      })
+      .set(updatePayload)
       .where(eq(planRates.id, id))
       .returning();
     return updated ?? null;
